@@ -1,0 +1,83 @@
+[Unit]
+Description=VPS GitHub Automatic Backup Service
+Documentation=https://github.com/your-org/vpsbackup
+After=network-online.target
+Wants=network-online.target
+# Ensure we wait for networking before contacting GitHub API
+After=systemd-resolved.service
+
+[Service]
+Type=simple
+# Service identity — runs as root to read /etc/passwd and manage user repos
+User=root
+Group=root
+
+# Entry point
+ExecStart=/opt/vpsbackup/venv/bin/python -m src.main /etc/vpsbackup/config.yaml
+WorkingDirectory=/opt/vpsbackup
+
+# Restart on failure with backoff
+Restart=on-failure
+RestartSec=10s
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# Clean shutdown — give the service 30s to finish pending git operations
+TimeoutStopSec=30
+
+# PID file for `vpsbackup now` signal delivery
+PIDFile=/run/vpsbackup.pid
+
+# Environment — avoid interactive prompts from git
+Environment=GIT_TERMINAL_PROMPT=0
+Environment=GIT_ASKPASS=/bin/false
+Environment=PYTHONUNBUFFERED=1
+
+# --- Security hardening ---
+# Prevent privilege escalation
+NoNewPrivileges=yes
+
+# Read-only /proc view (hides other processes' details)
+ProtectProc=invisible
+
+# Strict filesystem access
+# We need write access to:
+#   /var/lib/vpsbackup  — registry, repos, state
+#   /var/log/vpsbackup  — logs
+#   /etc/vpsbackup      — config and credentials (read only)
+#   /run                — PID file
+#   /tmp                — temporary git operations
+#   /home               — reading user home directories for backup
+ReadOnlyPaths=/etc /usr /lib /lib64
+ReadWritePaths=/var/lib/vpsbackup /var/log/vpsbackup /run /tmp
+
+# Protect system directories from writes
+ProtectSystem=strict
+
+# Allow reading /home but deny creating new homes
+ProtectHome=read-only
+
+# Deny access to kernel internals
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+
+# Restrict system calls to common ones
+# (allow full syscall set — restricting would require more tuning per-system)
+SystemCallErrorNumber=EPERM
+
+# Restrict network access to what's needed (GitHub API + git)
+# RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Temporary filesystem for /dev
+PrivateTmp=yes
+PrivateDevices=yes
+
+# Logging to journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vpsbackup
+
+[Install]
+WantedBy=multi-user.target
