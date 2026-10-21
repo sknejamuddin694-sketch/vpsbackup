@@ -146,9 +146,14 @@ fi
 success "Authenticated as GitHub user: ${GITHUB_USERNAME}"
 
 # ---------------------------------------------------------------------------
-# Step 4: Detect hostname
+# Step 4: Choose hostname / repository name
 # ---------------------------------------------------------------------------
 RAW_HOSTNAME=$(hostname -s 2>/dev/null || hostname)
+echo ""
+read -rp "  VPS name for GitHub repository [${RAW_HOSTNAME}]: " CUSTOM_HOSTNAME
+if [[ -n "${CUSTOM_HOSTNAME}" ]]; then
+    RAW_HOSTNAME="${CUSTOM_HOSTNAME}"
+fi
 # Sanitize: lowercase, replace non-alphanumeric with dash, collapse dashes
 VPS_HOSTNAME=$(echo "${RAW_HOSTNAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')
 # Truncate to 40 chars for hostname portion (repo max 100, leave room for username)

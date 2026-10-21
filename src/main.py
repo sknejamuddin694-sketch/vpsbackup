@@ -116,6 +116,22 @@ def main(config_path: str = "/etc/vpsbackup/config.yaml") -> None:
     # --- Initialize MonitorManager ---
     monitor_manager = fm.MonitorManager(on_backup=do_backup)
 
+    def _manual_backup(signum, frame):
+        """Handle `vpsbackup now` without terminating the service."""
+        trigger_file = Path("/run/vpsbackup.trigger")
+        try:
+            username = trigger_file.read_text().strip() or None
+            trigger_file.unlink(missing_ok=True)
+        except OSError:
+            username = None
+        logger.info(
+            "Manual backup requested%s",
+            f" for user {username}" if username else " for all users",
+        )
+        monitor_manager.trigger_backup(username)
+
+    signal.signal(signal.SIGUSR1, _manual_backup)
+
     # --- Onboard existing users ---
     _onboard_existing_users(registry, github_username, bm, gh, um, monitor_manager, cfg)
 

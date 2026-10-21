@@ -168,10 +168,15 @@ def cmd_now(args) -> None:
         try:
             import signal as sig
             pid = int(pid_file.read_text().strip())
+            # Pass the optional target through a root-only runtime file; the
+            # service handles SIGUSR1 and performs the backup in-process.
+            trigger_file = Path("/run/vpsbackup.trigger")
+            trigger_file.write_text(username or "")
+            trigger_file.chmod(0o600)
             os.kill(pid, sig.SIGUSR1)
             print(f"Backup triggered (PID {pid})")
             return
-        except (ValueError, ProcessLookupError, PermissionError):
+        except (ValueError, ProcessLookupError, PermissionError, OSError):
             pass
 
     # Fall back to direct backup
