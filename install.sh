@@ -146,11 +146,14 @@ fi
 success "Authenticated as GitHub user: ${GITHUB_USERNAME}"
 
 # ---------------------------------------------------------------------------
-# Step 4: Choose hostname / repository name
+# Step 4: Choose public IP / repository prefix
 # ---------------------------------------------------------------------------
-RAW_HOSTNAME=$(hostname -s 2>/dev/null || hostname)
+RAW_HOSTNAME=$(curl -4 -fsS --max-time 10 https://api.ipify.org 2>/dev/null || true)
+if [[ -z "${RAW_HOSTNAME}" ]]; then
+    RAW_HOSTNAME=$(hostname -s 2>/dev/null || hostname)
+fi
 echo ""
-read -rp "  VPS name for GitHub repository [${RAW_HOSTNAME}]: " CUSTOM_HOSTNAME
+read -rp "  Public IP/name for GitHub repository [${RAW_HOSTNAME}]: " CUSTOM_HOSTNAME
 if [[ -n "${CUSTOM_HOSTNAME}" ]]; then
     RAW_HOSTNAME="${CUSTOM_HOSTNAME}"
 fi

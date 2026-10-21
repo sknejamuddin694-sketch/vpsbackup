@@ -72,7 +72,7 @@ The installer will:
 1. Check the OS and install system dependencies (`git`, `python3-pip`, `python3-venv`, `inotify-tools`)
 2. Prompt for your GitHub PAT (input is hidden — nothing is echoed to the terminal)
 3. Validate the token against the GitHub API
-4. Detect the VPS hostname and create a private `<hostname>` repository on GitHub
+4. Detect the VPS public IP, ask for an optional custom name, and create a private `<ip-or-name>` repository on GitHub
 5. Install the Python application to `/opt/vpsbackup/`
 6. Store credentials at `/etc/vpsbackup/credentials` (mode 600, readable only by root)
 7. Create the `/usr/local/bin/vpsbackup` CLI symlink
@@ -99,6 +99,10 @@ Running `install.sh` again on an already-installed system is safe. It will re-va
 ---
 
 ## How It Works
+
+### Repository naming
+
+Each Linux user gets exactly one private repository named `<ip-or-name>-<username>`, for example `192-46-208-170-root` or `192-46-208-170-test`. The user's home directory is mirrored inside that repository. Database files and other runtime/database artifacts are excluded by the default rules.
 
 ### User detection
 
