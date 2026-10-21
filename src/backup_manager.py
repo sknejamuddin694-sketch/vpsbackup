@@ -53,8 +53,9 @@ def _configure_git_credentials(working_dir: Path, token: str) -> None:
     Configure git to use the token via a store credential helper in a
     temporary file — never embedded in the URL or environment.
     """
-    # Write credentials to a file readable only by root
-    cred_dir = Path("/etc/vpsbackup")
+    # /etc is read-only under the systemd sandbox; keep the helper in the
+    # service's writable state directory and restrict it to root.
+    cred_dir = Path("/var/lib/vpsbackup")
     cred_dir.mkdir(parents=True, exist_ok=True)
     git_cred_file = cred_dir / "git-credentials"
     from .github_manager import get_github_username

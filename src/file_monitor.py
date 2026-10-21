@@ -39,7 +39,7 @@ try:
         | inotify_simple.flags.MOVED_TO
         | inotify_simple.flags.CREATE
         | inotify_simple.flags.DELETE
-        | inotify_simple.flags.MOVE_FROM
+        | inotify_simple.flags.MOVED_FROM
         | inotify_simple.flags.ATTRIB
     )
     _INOTIFY_AVAILABLE = True
