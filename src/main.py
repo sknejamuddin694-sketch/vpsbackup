@@ -133,6 +133,10 @@ def main(config_path: str = "/etc/vpsbackup/config.yaml") -> None:
     user_watcher.start()
 
     # --- Periodic reconciliation scan ---
+    # Set this before starting the thread; otherwise the thread can run
+    # immediately and read the not-yet-initialized closure variable.
+    _running = True
+
     def reconciliation_scan() -> None:
         """Periodically trigger backups to catch missed inotify events."""
         interval = int(cfg.get("backup", "scan_interval", 300))
@@ -150,8 +154,6 @@ def main(config_path: str = "/etc/vpsbackup/config.yaml") -> None:
     recon_thread.start()
 
     # --- Graceful shutdown ---
-    _running = True
-
     def _shutdown(signum, frame):
         nonlocal _running
         logger.info("Received signal %d — shutting down", signum)
